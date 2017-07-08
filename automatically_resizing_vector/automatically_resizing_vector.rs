@@ -36,9 +36,14 @@ impl<T> FVec<T> {
 
     pub fn push(&mut self, item: T) {
         unsafe {
+            let growth_factor = self.growth_factor;
+            let current_cap = self.cap;
             if self.cap == self.len {
-                let target_cap = self.cap * self.growth_factor as usize;
-                self.resize(target_cap);
+                if self.cap == 0 {
+                    self.allocate(4);
+                } else {
+                    self.resize(current_cap * growth_factor as usize);
+                }
             }
             let end = self.ptr.offset(self.len as isize);
             ptr::write(end, item);
@@ -68,10 +73,13 @@ impl<T> FVec<T> {
         }
     }
 
-    fn allocate(&mut self, cap: usize) {
-        let item_size = mem::size_of::<T>();
-        println!("Calling allocate");
-        unimplemented!();
+    fn allocate(&mut self, target_cap: usize) {
+        unsafe {
+            let item_size = mem::size_of::<T>();
+            let target_ptr = heap::allocate(item_size * target_cap, mem::align_of::<T>());
+            self.cap = target_cap;
+            self.ptr = target_ptr as *mut _;
+        }
     }
 
     fn truncate(&mut self, target_cap: usize) {
