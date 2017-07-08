@@ -54,19 +54,24 @@ impl<T> Vec<T> {
     }
 
     pub fn push(&mut self, item: T) {
-        if self.cap == self.len {
-            let target_cap = self.cap * self.growth_factor as usize;
-            self.resize(target_cap);
-            self.push(item);
-        } else {
-            let end = unsafe { self.ptr.offset(self.len as isize) };
-            unsafe { ptr::write(end, item) };
-            self.len += 1;
+        unsafe {
+            if self.cap == self.len {
+                let target_cap = self.cap * self.growth_factor as usize;
+                self.resize(target_cap);
+                self.push(item);
+            } else {
+                let end = self.ptr.offset(self.len as isize);
+                unsafe ptr::write(end, item);
+                self.len += 1;
+            }
         }
     }
 
-    fn resize(&mut self, new_cap: usize) -> Vec<T> {
-        unimplemented!();
+    fn resize(&mut self, target_cap: usize) -> Vec<T> {
+        unsafe {
+            self.cap = target_cap;
+            let end = self.ptr.offset(self.len as isize);
+        }
     }
 }
 
