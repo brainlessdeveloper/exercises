@@ -112,7 +112,7 @@ fn initial_push_sets_capacity_to_four() {
 }
 
 #[test]
-fn push_above_capacity_doubles_capacity() {
+fn push_above_capacity_multiplies_capacity_by_growth_factor() {
     let mut my_vector: FVec<&str> = FVec::new();
     my_vector.push("For");
     my_vector.push("you");
@@ -120,7 +120,7 @@ fn push_above_capacity_doubles_capacity() {
     my_vector.push("for");
     my_vector.push("her");
     assert_eq!(my_vector.len, 5);
-    assert_eq!(my_vector.cap, 8);
+    assert_eq!(my_vector.cap, 8); // Default growth value is 2
 }
 
 #[test]
@@ -132,4 +132,21 @@ fn access_by_index() {
     assert_eq!(my_vector.at(0), 20);
     let last_index = my_vector.len - 1;
     assert_eq!(my_vector.at(last_index), 10);
+}
+
+#[test]
+fn items_still_there_after_reallocation() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    let initial_cap = my_vector.cap;
+    my_vector.push("For");
+    my_vector.push("you");
+    my_vector.push("and");
+    my_vector.push("for");
+    my_vector.push("her");
+    assert!(my_vector.cap != initial_cap);
+    assert_eq!(my_vector.at(0), "For");
+    assert_eq!(my_vector.at(1), "you");
+    assert_eq!(my_vector.at(2), "and");
+    assert_eq!(my_vector.at(3), "for");
+    assert_eq!(my_vector.at(4), "her");
 }
