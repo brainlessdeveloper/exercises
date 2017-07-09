@@ -9,6 +9,7 @@ use core::mem;
 use core::ptr::null_mut;
 use core::ptr;
 
+#[derive(Debug)]
 struct FVec<T> {
     cap: usize,
     growth_factor: u8,
@@ -45,9 +46,15 @@ impl<T> FVec<T> {
                     self.resize(current_cap * growth_factor as usize);
                 }
             }
-            let end = self.ptr.offset(self.len as isize);
+            let end = self.ptr.offset(self.len as isize) as *mut T;
             ptr::write(end, item);
             self.len += 1;
+        }
+    }
+
+    pub fn at(&mut self, index: usize) -> T {
+        unsafe {
+            ptr::read::<T>(self.ptr.offset(index as isize))
         }
     }
 
@@ -83,12 +90,46 @@ impl<T> FVec<T> {
     }
 
     fn truncate(&mut self, target_cap: usize) {
-        println!("Calling truncate");
         unimplemented!();
     }
 }
 
 fn main() {
-    let mut super_vector: FVec<&str> = FVec::new();
-    super_vector.push("Hello");
+    println!("Yo!");
+}
+
+#[test]
+fn empty_vector_is_not_allocated() {
+    let my_vector: FVec<&str> = FVec::new();
+    assert_eq!(my_vector.ptr, null_mut());
+}
+
+#[test]
+fn initial_push_sets_capacity_to_four() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    my_vector.push("Hello");
+    assert_eq!(my_vector.cap, 4);
+}
+
+#[test]
+fn push_above_capacity_doubles_capacity() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    my_vector.push("For");
+    my_vector.push("you");
+    my_vector.push("and");
+    my_vector.push("for");
+    my_vector.push("her");
+    assert_eq!(my_vector.len, 5);
+    assert_eq!(my_vector.cap, 8);
+}
+
+#[test]
+fn access_by_index() {
+    let mut my_vector: FVec<u8> = FVec::new();
+    my_vector.push(20);
+    my_vector.push(40);
+    my_vector.push(10);
+    assert_eq!(my_vector.at(0), 20);
+    let last_index = my_vector.len - 1;
+    assert_eq!(my_vector.at(last_index), 10);
 }
