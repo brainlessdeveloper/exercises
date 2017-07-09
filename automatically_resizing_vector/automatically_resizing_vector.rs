@@ -1,10 +1,10 @@
 #![feature(alloc)]
-#![feature(heap_api)]
+#![feature(allocator_api)]
 
 extern crate alloc;
 extern crate core;
 
-use alloc::heap;
+use alloc::heap::{Alloc, Layout, Heap};
 use core::mem;
 use core::ptr::null_mut;
 use core::ptr;
@@ -69,12 +69,12 @@ impl<T> FVec<T> {
     fn reallocate(&mut self, target_cap: usize) {
         unsafe {
             let item_size = mem::size_of::<T>();
-            let target_ptr = heap::reallocate(
-                self.ptr as *mut _,
-                item_size * self.cap,
-                item_size * target_cap,
-                mem::align_of::<T>(),
-            );
+            let item_align = mem::align_of::<T>();
+            let target_ptr = Heap::default().realloc(
+                self.ptr as *mut u8,
+                Layout::from_size_align(item_size * self.cap, item_align).expect("Failed to construct previous layout during reallocation"),
+                Layout::from_size_align(item_size * target_cap, item_align).expect("Failed to construct new layout during reallocation"),
+            ).expect("Failed to reallocate.");
             self.cap = target_cap;
             self.ptr = target_ptr as *mut _;
         }
@@ -83,7 +83,9 @@ impl<T> FVec<T> {
     fn allocate(&mut self, target_cap: usize) {
         unsafe {
             let item_size = mem::size_of::<T>();
-            let target_ptr = heap::allocate(item_size * target_cap, mem::align_of::<T>());
+            let target_ptr = Heap::default().alloc(
+                Layout::from_size_align(item_size * target_cap, mem::align_of::<T>()).expect("Failed to construct new layout during initial allocation"),
+            ).expect("Failed during initial allocation");
             self.cap = target_cap;
             self.ptr = target_ptr as *mut _;
         }
