@@ -54,7 +54,7 @@ impl<T> FVec<T> {
 
     pub fn at(&mut self, index: usize) -> T {
         unsafe {
-            ptr::read::<T>(self.ptr.offset(index as isize))
+            ptr::read(self.ptr.offset(index as isize))
         }
     }
 
