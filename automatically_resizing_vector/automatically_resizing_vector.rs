@@ -37,15 +37,7 @@ impl<T> FVec<T> {
 
     pub fn push(&mut self, item: T) {
         unsafe {
-            let growth_factor = self.growth_factor;
-            let current_cap = self.cap;
-            if self.cap == self.len {
-                if self.cap == 0 {
-                    self.allocate(4);
-                } else {
-                    self.resize(current_cap * growth_factor as usize);
-                }
-            }
+            self.prepare_for_len_increase();
             let end = self.ptr.offset(self.len as isize) as *mut T;
             ptr::write(end, item);
             self.len += 1;
@@ -60,6 +52,7 @@ impl<T> FVec<T> {
 
     pub fn insert(&mut self, item: T, index: usize) {
         unsafe {
+            self.prepare_for_len_increase();
             let destination = self.ptr.offset((index + 1) as isize) as *mut T;
             let count = self.len - index;
             ptr::copy(self.ptr.offset(index as isize) as *const T, destination, count);
@@ -98,6 +91,18 @@ impl<T> FVec<T> {
             ).expect("Failed during initial allocation");
             self.cap = target_cap;
             self.ptr = target_ptr as *mut _;
+        }
+    }
+
+    fn prepare_for_len_increase(&mut self) {
+        let growth_factor = self.growth_factor;
+        let current_cap = self.cap;
+        if self.cap == self.len {
+            if self.cap == 0 {
+                self.allocate(4);
+            } else {
+                self.resize(current_cap * growth_factor as usize);
+            }
         }
     }
 
