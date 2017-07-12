@@ -58,6 +58,16 @@ impl<T> FVec<T> {
         }
     }
 
+    pub fn insert(&mut self, item: T, index: usize) {
+        unsafe {
+            let destination = self.ptr.offset((index + 1) as isize) as *mut T;
+            let count = self.len - index;
+            ptr::copy(self.ptr.offset(index as isize) as *const T, destination, count);
+            ptr::write(self.ptr.offset(index as isize), item);
+            self.len += 1;
+        }
+    }
+
     fn resize(&mut self, target_cap: usize) {
         if target_cap > self.cap {
             self.reallocate(target_cap);
@@ -151,4 +161,22 @@ fn items_still_there_after_reallocation() {
     assert_eq!(my_vector.at(2), "and");
     assert_eq!(my_vector.at(3), "for");
     assert_eq!(my_vector.at(4), "her");
+}
+
+#[test]
+fn insert_works() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    let initial_cap = my_vector.cap;
+    my_vector.push("For");
+    my_vector.push("me");
+    my_vector.push("only");
+    my_vector.insert("and", 2);
+    assert_eq!(my_vector.at(3), "only");
+    my_vector.insert("you", 3);
+    assert_eq!(my_vector.at(0), "For");
+    assert_eq!(my_vector.at(1), "me");
+    assert_eq!(my_vector.at(2), "and");
+    assert_eq!(my_vector.at(3), "you");
+    assert_eq!(my_vector.at(4), "only");
+    assert_eq!(my_vector.len, 5);
 }
