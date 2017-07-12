@@ -169,9 +169,8 @@ fn items_still_there_after_reallocation() {
 }
 
 #[test]
-fn insert_works() {
+fn insert() {
     let mut my_vector: FVec<&str> = FVec::new();
-    let initial_cap = my_vector.cap;
     my_vector.push("For");
     my_vector.push("me");
     my_vector.push("only");
@@ -184,4 +183,37 @@ fn insert_works() {
     assert_eq!(my_vector.at(3), "you");
     assert_eq!(my_vector.at(4), "only");
     assert_eq!(my_vector.len, 5);
+}
+
+#[test]
+fn insert_when_empty() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    my_vector.insert("Tators", 0);
+    assert_eq!(my_vector.at(0), "Tators");
+    assert_eq!(my_vector.len, 1);
+}
+
+#[test]
+fn insert_at_zero() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    my_vector.push("me");
+    my_vector.push("only");
+    my_vector.insert("For", 0);
+    assert_eq!(my_vector.at(0), "For");
+    assert_eq!(my_vector.at(1), "me");
+    assert_eq!(my_vector.at(2), "only");
+    assert_eq!(my_vector.len, 3);
+}
+
+#[test]
+fn insert_at_end() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    my_vector.push("For");
+    my_vector.push("me");
+    let last_index = my_vector.len;
+    my_vector.insert("only", last_index);
+    assert_eq!(my_vector.at(0), "For");
+    assert_eq!(my_vector.at(1), "me");
+    assert_eq!(my_vector.at(2), "only");
+    assert_eq!(my_vector.len, 3);
 }
