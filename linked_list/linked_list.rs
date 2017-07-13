@@ -47,6 +47,13 @@ impl<T> FLinkedList<T> {
         self.pop_head_node().map(Node::pluck_content)
     }
 
+    pub fn at(&self, index: usize) -> Option<T> {
+        match self.node_at(index) {
+            Some(node) => Node::pluck_content(node),
+            _ => None,
+        }
+    }
+
     fn prepend_node(&mut self, mut node: Box<Node<T>>) {
         unsafe {
             node.next = self.head;
@@ -63,6 +70,14 @@ impl<T> FLinkedList<T> {
             self.len -= 1;
             node
         })
+    }
+
+    fn node_at(&self, index: usize) -> Option<Box<Node<T>>> {
+        let node = self.head;
+        for i in [0..index] {
+            node = node.next;
+        }
+        node
     }
 }
 
@@ -86,4 +101,13 @@ fn prepend_and_pop_head_work() {
     assert_eq!(my_linked_list.pop_head(), Some("hello"));
     assert_eq!(my_linked_list.pop_head(), Some("there"));
     assert_eq!(my_linked_list.pop_head(), None);
+}
+
+#[test]
+fn node_at_works() {
+    let mut my_linked_list: FLinkedList<&str> = FLinkedList::new();
+    my_linked_list.prepend("Hello");
+    my_linked_list.prepend("World");
+    assert_eq!(my_linked_list.at(0), Some("Hello"));
+    assert_eq!(my_linked_list.at(1), Some("World"));
 }
