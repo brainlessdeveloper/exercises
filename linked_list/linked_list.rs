@@ -48,10 +48,7 @@ impl<T> FLinkedList<T> {
     }
 
     pub fn at(&self, index: usize) -> Option<T> {
-        match self.node_at(index) {
-            Some(node) => Node::pluck_content(node),
-            _ => None,
-        }
+        self.node_at(index).map(Node::pluck_content)
     }
 
     fn prepend_node(&mut self, mut node: Box<Node<T>>) {
@@ -72,12 +69,25 @@ impl<T> FLinkedList<T> {
         })
     }
 
-    fn node_at(&self, index: usize) -> Option<Box<Node<T>>> {
-        let node = self.head;
-        for i in [0..index] {
-            node = node.next;
+    fn node_at(&self, mut index: usize) -> Option<Box<Node<T>>> {
+        if index >= self.len { None } else {
+            let mut current = self.head;
+            while index > 0 {
+                unsafe {
+                    current = match current {
+                        Some(element) => Box::from_raw(element.as_ptr()).next,
+                        _ => None,
+                    }
+                }
+                index -= 1;
+            }
+            unsafe {
+                match current {
+                    Some(element) => Some(Box::from_raw(element.as_ptr())),
+                    _ => None,
+                }
+            }
         }
-        node
     }
 }
 
@@ -108,6 +118,8 @@ fn node_at_works() {
     let mut my_linked_list: FLinkedList<&str> = FLinkedList::new();
     my_linked_list.prepend("Hello");
     my_linked_list.prepend("World");
-    assert_eq!(my_linked_list.at(0), Some("Hello"));
-    assert_eq!(my_linked_list.at(1), Some("World"));
+    assert_eq!(my_linked_list.at(0), Some("World"));
+    // Segfault here - Does not happen if run in the main program (?)
+    assert_eq!(my_linked_list.at(1), Some("Hello"));
+    assert_eq!(my_linked_list.at(2), None);
 }
