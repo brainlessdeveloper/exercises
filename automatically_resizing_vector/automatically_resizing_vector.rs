@@ -61,6 +61,13 @@ impl<T> FVec<T> {
         }
     }
 
+    pub fn pop(&mut self) -> T {
+        unsafe {
+            self.len -= 1;
+            ptr::read(self.ptr.offset(self.len as isize))
+        }
+    }
+
     fn resize(&mut self, target_cap: usize) {
         if target_cap > self.cap {
             self.reallocate(target_cap);
@@ -216,4 +223,14 @@ fn insert_at_end() {
     assert_eq!(my_vector.at(1), "me");
     assert_eq!(my_vector.at(2), "only");
     assert_eq!(my_vector.len, 3);
+}
+
+#[test]
+fn pop() {
+    let mut my_vector: FVec<&str> = FVec::new();
+    my_vector.push("Something");
+    my_vector.push("bad");
+    assert_eq!(my_vector.pop(), "bad");
+    my_vector.push("good");
+    assert_eq!(my_vector.at(1), "good");
 }
